@@ -224,6 +224,7 @@ async function main() {
   console.log("Attendance seeded.");
 
   // 9. Payruns
+  const activeEmps = ["Riya Kapoor", "Karan Mehta", "Ananya Sinha", "Devansh Rao", "Priya Nair"];
   const prAugust = await prisma.payrun.create({
     data: {
       name: "August 2025 Payroll",
@@ -232,10 +233,10 @@ async function main() {
       status: "Paid",
       salaryStructureId: structure.id,
       createdById: (await prisma.user.findFirst({ where: { workEmail: "payroll.manager@peoplepay360.demo" } }))!.id,
+      employees: { create: activeEmps.map((name) => ({ employeeId: employees[name] })) },
     }
   });
 
-  const activeEmps = ["Riya Kapoor", "Karan Mehta", "Ananya Sinha", "Devansh Rao", "Priya Nair"];
   for (const e of activeEmps) {
     const contract = await prisma.contract.findFirst({ where: { employeeId: employees[e], status: "Active" } });
     if (contract) {
@@ -264,6 +265,9 @@ async function main() {
       status: "Draft",
       salaryStructureId: structure.id,
       createdById: (await prisma.user.findFirst({ where: { workEmail: "payroll.manager@peoplepay360.demo" } }))!.id,
+      employees: {
+        create: ["Riya Kapoor", "Karan Mehta", "Ananya Sinha", "Devansh Rao", "Priya Nair", "Aditya Verma"].map((name) => ({ employeeId: employees[name] })),
+      },
     }
   });
   console.log("Payruns seeded.");
