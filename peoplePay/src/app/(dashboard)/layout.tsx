@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Users, FileText, CalendarClock, LogOut, LayoutDashboard } from "lucide-react";
+import { AttendanceWidget } from "@/modules/time-tracking/components/AttendanceWidget";
 
 export default function DashboardLayout({
   children,
@@ -81,8 +82,8 @@ export default function DashboardLayout({
         {/* Ambient background glow */}
         <div className="absolute top-0 right-0 w-[40%] h-[30%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
         
-        <header className="h-16 border-b border-zinc-800/50 bg-zinc-950/50 backdrop-blur-md flex items-center px-8 z-10">
-           {/* Topbar content could go here */}
+        <header className="h-16 border-b border-zinc-800/50 bg-zinc-950/50 backdrop-blur-md flex items-center justify-end px-8 z-10">
+           <AttendanceWidget />
         </header>
         
         <main className="flex-1 overflow-y-auto p-8 z-10 relative">
