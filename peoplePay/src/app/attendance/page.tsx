@@ -50,14 +50,17 @@ export default function AttendancePage() {
     fetchRecords();
   }, [statusFilter, exceptionsOnly]);
 
+  const toLocalInputFormat = (dateStr?: string | Date | null) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const openCorrection = (record: any) => {
     setCorrectionModal(record);
-    setNewCheckIn(
-      record.checkIn ? new Date(record.checkIn).toISOString().slice(0, 16) : ''
-    );
-    setNewCheckOut(
-      record.checkOut ? new Date(record.checkOut).toISOString().slice(0, 16) : ''
-    );
+    setNewCheckIn(toLocalInputFormat(record.checkIn));
+    setNewCheckOut(toLocalInputFormat(record.checkOut));
     setCorrectionReason('');
     setActionError(null);
   };
@@ -243,7 +246,7 @@ export default function AttendancePage() {
                           {record.employee?.jobPosition || record.employee?.department?.name || 'Staff'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-xs font-mono">
+                      <td className="px-6 py-4 text-xs font-mono" suppressHydrationWarning>
                         {new Date(record.checkIn).toLocaleString([], {
                           month: 'short',
                           day: 'numeric',
@@ -251,7 +254,7 @@ export default function AttendancePage() {
                           minute: '2-digit',
                         })}
                       </td>
-                      <td className="px-6 py-4 text-xs font-mono">
+                      <td className="px-6 py-4 text-xs font-mono" suppressHydrationWarning>
                         {record.checkOut ? (
                           new Date(record.checkOut).toLocaleString([], {
                             month: 'short',
