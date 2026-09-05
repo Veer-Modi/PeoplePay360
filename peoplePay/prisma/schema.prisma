@@ -47,6 +47,8 @@ model Employee {
   status           String             @default("Active") // Active, Inactive, Archived
   workLocation     String?
   company          String?
+  // Nullable until HR records payment details; payroll surfaces a warning when absent.
+  bankAccountNumber String?
 
   departmentId     String?
   department       Department?        @relation(fields: [departmentId], references: [id])
@@ -64,6 +66,7 @@ model Employee {
   timeOffAllocations TimeOffAllocation[]
   timeOffRequests  TimeOffRequest[]
   payslips         Payslip[]
+  payrunScopes     PayrunEmployee[]
 }
 
 model Contract {
@@ -233,6 +236,18 @@ model Payrun {
 
   payslips         Payslip[]
   warnings         PayrollWarning[]
+  employees        PayrunEmployee[]
+}
+
+// The explicit employee scope selected in Payrun wizard Step 2 (BR-PAY-001).
+model PayrunEmployee {
+  payrunId         String
+  employeeId       String
+
+  payrun           Payrun             @relation(fields: [payrunId], references: [id], onDelete: Cascade)
+  employee         Employee           @relation(fields: [employeeId], references: [id])
+
+  @@id([payrunId, employeeId])
 }
 
 model Payslip {
