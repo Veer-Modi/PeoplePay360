@@ -14,13 +14,17 @@ export default function EmployeeDetailPage() {
     fetch(`/api/v1/employees/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
-        setEmployee(data);
+        if (data.error || !data.fullName) {
+          setEmployee(null);
+        } else {
+          setEmployee(data);
+        }
         setLoading(false);
       });
   }, [params.id]);
 
   if (loading) return <div className="text-zinc-500 py-10">Loading Employee Details...</div>;
-  if (!employee) return <div className="text-red-400 py-10">Employee not found.</div>;
+  if (!employee || !employee.fullName) return <div className="text-red-400 py-10">Employee not found or access denied.</div>;
 
   const smartButtons = [
     { label: "Contracts", value: 1, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
