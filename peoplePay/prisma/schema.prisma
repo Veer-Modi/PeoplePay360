@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(uuid())
+  workEmail        String             @unique
+  passwordHash     String
+  active           Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  employeeId       String?            @unique
+  employee         Employee?          @relation(fields: [employeeId], references: [id])
+  
+  roleId           String
+  role             Role               @relation(fields: [roleId], references: [id])
+  
+  attendanceCorrections Attendance[]  @relation("CorrectedBy")
+  timeOffApprovals      TimeOffRequest[] @relation("ApprovedBy")
+  payrunsCreated        Payrun[]       @relation("CreatedBy")
+}
+
+model Role {
+  id               String             @id @default(uuid())
+  name             String             @unique // Employee, HR Manager, HR Payroll User, HR Payroll Manager, Admin
+  users            User[]
+}
+
+model Department {
+  id               String             @id @default(uuid())
+  name             String             @unique
+  employees        Employee[]
+  contracts        Contract[]
+}
+
+model Employee {
+  id               String             @id @default(uuid())
+  fullName         String
+  workEmail        String?            @unique
+  jobPosition      String?
+  status           String             @default("Active") // Active, Inactive, Archived
+  workLocation     String?
+  company          String?
+
+  departmentId     String?
+  department       Department?        @relation(fields: [departmentId], references: [id])
+
+  managerId        String?
+  manager          Employee?          @relation("ManagerToEmployee", fields: [managerId], references: [id])
+  subordinates     Employee[]         @relation("ManagerToEmployee")
+
+  workingScheduleId String?
+  workingSchedule  WorkingSchedule?   @relation(fields: [workingScheduleId], references: [id])
+
+  user             User?
+  contracts        Contract[]
+  attendances      Attendance[]
+  timeOffAllocations TimeOffAllocation[]
+  timeOffRequests  TimeOffRequest[]
+  payslips         Payslip[]
+}
+
+model Contract {
+  id               String             @id @default(uuid())
+  jobPosition      String?
+  startDate        DateTime
+  endDate          DateTime?
+  wage             Decimal            @db.Decimal(10, 2)
+  status           String             @default("Draft") // Draft, Active, Expired, Cancelled
+
+  employeeId       String
+  employee         Employee           @relation(fields: [employeeId], references: [id])
+  
+  departmentId     String?
+  department       Department?        @relation(fields: [departmentId], references: [id])
+
+  workingScheduleId String
+  workingSchedule  WorkingSchedule    @relation(fields: [workingScheduleId], references: [id])
+
+  salaryStructureId String
+  salaryStructure  SalaryStructure    @relation(fields: [salaryStructureId], references: [id])
+
+  payslips         Payslip[]
+}
+
+model WorkingSchedule {
+  id               String             @id @default(uuid())
+  name             String
+  type             String?
+  weeklyHours      Decimal            @default(0) @db.Decimal(10, 2)
+  company          String?
+
+  days             WorkingScheduleDay[]
+  employees        Employee[]
+  contracts        Contract[]
+}
+
+model WorkingScheduleDay {
+  id               String             @id @default(uuid())
+  dayOfWeek        String             // Mon, Tue, etc.
+  startTime        DateTime           @db.Time
+  endTime          DateTime           @db.Time
+  breakMinutes     Int                @default(0)
+  computedHours    Decimal            @db.Decimal(10, 2)
+
+  workingScheduleId String
+  workingSchedule  WorkingSchedule    @relation(fields: [workingScheduleId], references: [id], onDelete: Cascade)
+}
+
+model Attendance {
+  id               String             @id @default(uuid())
+  checkIn          DateTime
+  checkOut         DateTime?
+  workedHours      Decimal            @default(0) @db.Decimal(10, 2)
+  status           String             // Present, Late, Absent
+
+  employeeId       String
+  employee         Employee           @relation(fields: [employeeId], references: [id])
+
+  correctedById    String?
+  correctedBy      User?              @relation("CorrectedBy", fields: [correctedById], references: [id])
+  correctedAt      DateTime?
+}
+
+model TimeOffType {
+  id                  String             @id @default(uuid())
+  name                String
+  unit                String             // Days, Hours
+  requiresAllocation  Boolean            @default(false)
+  requiresApproval    Boolean            @default(true)
+  affectsPayroll      Boolean            @default(false)
+  active              Boolean            @default(true)
+
+  allocations         TimeOffAllocation[]
+  requests            TimeOffRequest[]
+}
+
+model TimeOffAllocation {
+  id                  String             @id @default(uuid())
+  allocatedAmount     Decimal            @db.Decimal(10, 2)
+  takenAmount         Decimal            @default(0) @db.Decimal(10, 2)
+  remainingAmount     Decimal            @db.Decimal(10, 2)
+  validFrom           DateTime?
+  validTo             DateTime?
+  status              String             @default("Draft") // Draft, Approved, Expired
+
+  employeeId          String
+  employee            Employee           @relation(fields: [employeeId], references: [id])
+
+  timeOffTypeId       String
+  timeOffType         TimeOffType        @relation(fields: [timeOffTypeId], references: [id])
+
+  requests            TimeOffRequest[]
+}
+
+model TimeOffRequest {
+  id                  String             @id @default(uuid())
+  startDate           DateTime
+  endDate             DateTime
+  duration            Decimal            @db.Decimal(10, 2)
+  status              String             @default("Pending") // Pending, Approved, Refused
+  reason              String?            @db.Text
+
+  employeeId          String
+  employee            Employee           @relation(fields: [employeeId], references: [id])
+
+  timeOffTypeId       String
+  timeOffType         TimeOffType        @relation(fields: [timeOffTypeId], references: [id])
+
+  allocationId        String?
+  allocation          TimeOffAllocation? @relation(fields: [allocationId], references: [id])
+
+  approverId          String?
+  approver            User?              @relation("ApprovedBy", fields: [approverId], references: [id])
+}
+
+model SalaryStructure {
+  id               String             @id @default(uuid())
+  name             String
+  active           Boolean            @default(true)
+
+  rules            SalaryRule[]
+  contracts        Contract[]
+  payruns          Payrun[]
+  payslips         Payslip[]
+}
+
+model SalaryRuleCategory {
+  id               String             @id @default(uuid())
+  name             String             @unique // Basic, Allowances, Gross, Deductions, Net
+  rules            SalaryRule[]
+  payslipLines     PayslipLine[]
+}
+
+model SalaryRule {
+  id               String             @id @default(uuid())
+  name             String
+  code             String
+  sequence         Int
+  calculationType  String             // Fixed, Percentage, Formula
+  calculationValue String
+  active           Boolean            @default(true)
+
+  salaryStructureId String
+  salaryStructure  SalaryStructure    @relation(fields: [salaryStructureId], references: [id])
+
+  categoryId       String
+  category         SalaryRuleCategory @relation(fields: [categoryId], references: [id])
+
+  payslipLines     PayslipLine[]
+
+  @@unique([salaryStructureId, code])
+}
+
+model Payrun {
+  id               String             @id @default(uuid())
+  name             String
+  periodStart      DateTime
+  periodEnd        DateTime
+  status           String             @default("Draft") // Draft, Computed, Validated, Paid
+
+  salaryStructureId String
+  salaryStructure  SalaryStructure    @relation(fields: [salaryStructureId], references: [id])
+
+  createdById      String
+  createdBy        User               @relation("CreatedBy", fields: [createdById], references: [id])
+
+  payslips         Payslip[]
+  warnings         PayrollWarning[]
+}
+
+model Payslip {
+  id               String             @id @default(uuid())
+  periodStart      DateTime
+  periodEnd        DateTime
+  workedDays       Decimal            @db.Decimal(10, 2)
+  status           String             // Draft, Computed, Validated, Paid
+  grossTotal       Decimal            @db.Decimal(10, 2)
+  netTotal         Decimal            @db.Decimal(10, 2)
+
+  payrunId         String
+  payrun           Payrun             @relation(fields: [payrunId], references: [id])
+
+  employeeId       String
+  employee         Employee           @relation(fields: [employeeId], references: [id])
+
+  contractId       String
+  contract         Contract           @relation(fields: [contractId], references: [id])
+
+  salaryStructureId String
+  salaryStructure  SalaryStructure    @relation(fields: [salaryStructureId], references: [id])
+
+  lines            PayslipLine[]
+  warnings         PayrollWarning[]
+
+  @@unique([employeeId, payrunId]) // VAL-PSL-001
+}
+
+model PayslipLine {
+  id               String             @id @default(uuid())
+  sequence         Int
+  amount           Decimal            @db.Decimal(10, 2)
+
+  payslipId        String
+  payslip          Payslip            @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+
+  salaryRuleId     String
+  salaryRule       SalaryRule         @relation(fields: [salaryRuleId], references: [id])
+
+  categoryId       String
+  category         SalaryRuleCategory @relation(fields: [categoryId], references: [id])
+}
+
+model PayrollWarning {
+  id               String             @id @default(uuid())
+  type             String             // missing_bank_details, duplicate_payslip, missing_contract, etc.
+  severity         String             // Blocking, Non-blocking
+  message          String             @db.Text
+  resolved         Boolean            @default(false)
+
+  payrunId         String?
+  payrun           Payrun?            @relation(fields: [payrunId], references: [id])
+
+  payslipId        String?
+  payslip          Payslip?           @relation(fields: [payslipId], references: [id])
+}
