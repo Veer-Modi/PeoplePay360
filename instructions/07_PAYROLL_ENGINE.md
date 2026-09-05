@@ -105,6 +105,57 @@ Assume Salary Structure "Regular Salary" with rules:
 5. `NET` (sequence 5, formula, GROSS − DEDUCTION) = 32,000
 
 This demonstrates sequencing and dependency only — actual rule content for the hackathon build is a `[TEAM DECISION]` to be made during seed-data design (`13_SEED_DATA.md`).
+# Payrun Calculation Flow
+
+```text
+                    PAYRUN
+                      │
+                      ▼
+               Select Employees
+                      │
+                      ▼
+             Find Employee Contract
+                      │
+             ┌────────┴────────┐
+             │                 │
+        No contract       Valid contract
+             │                 │
+          Warning              ▼
+       Skip employee     Load Salary Structure
+                               │
+                               ▼
+                          Load Rules
+                               │
+                               ▼
+                      Sort by Sequence
+                               │
+                               ▼
+                       Calculate Rule 1
+                               │
+                               ▼
+                       Calculate Rule 2
+                               │
+                               ▼
+                       Calculate Rule 3
+                               │
+                               ▼
+                              ...
+                               │
+                               ▼
+                         Create Payslip
+                               │
+                      ┌────────┴────────┐
+                      ▼                 ▼
+                 Payslip Lines      Gross / Net
+                      │
+                      ▼
+                Validation Checks
+                      │
+                      ▼
+                Payroll Warnings
+                      │
+                      ▼
+                 PAYRUN = COMPUTED
 
 ## Determinism Requirement
 
