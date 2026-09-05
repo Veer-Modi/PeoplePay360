@@ -2,13 +2,32 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ArrowLeft, Briefcase, Mail, Building2, MapPin, Calendar, Clock, ArrowUpRight } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
+import { ArrowLeft, Briefcase, Mail, Building2, MapPin, Calendar, Clock, ArrowUpRight, Trash2, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function EmployeeDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const [employee, setEmployee] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to archive this employee?")) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/v1/employees/${params.id}`, { method: "DELETE" });
+      if (res.ok) {
+        router.push("/employees");
+      } else {
+        throw new Error("Failed to delete");
+      }
+    } catch (e) {
+      alert("Error archiving employee.");
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`/api/v1/employees/${params.id}`)
@@ -59,13 +78,27 @@ export default function EmployeeDetailPage() {
                   {employee.jobPosition} at {employee.department?.name}
                 </p>
               </div>
-              <span className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
-                employee.status === 'Active' 
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                  : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
-              }`}>
-                {employee.status}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                  employee.status === 'Active' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
+                }`}>
+                  {employee.status}
+                </span>
+                {employee.status !== "Archived" && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleDelete} 
+                    disabled={isDeleting}
+                    className="border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {isDeleting ? "Archiving..." : "Archive"}
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-6">
