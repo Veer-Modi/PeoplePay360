@@ -50,6 +50,7 @@ export interface PayrunInput {
   status: PayrunStatus;
   salaryStructure: SalaryStructureInput;
   employeeIds: string[];
+  createdById: string;
 }
 
 export interface PayslipLineResult {
@@ -69,6 +70,7 @@ export interface PayrollWarningResult {
 }
 
 export interface ComputedPayslip {
+  id?: string;
   employeeId: string;
   employeeName: string;
   employeeEmail?: string | null;
@@ -91,13 +93,17 @@ export interface ContractResolver {
 export interface PayrollRepository {
   getEmployee(employeeId: string): Promise<EmployeePayrollInput | null>;
   getWorkedDays(employeeId: string, period: PayrollPeriod): Promise<DecimalValue>;
+  getUnpaidLeaveDays(employeeId: string, period: PayrollPeriod): Promise<DecimalValue>;
   hasPayslip(payrunId: string, employeeId: string): Promise<boolean>;
   replaceComputedPayslips(payrunId: string, payslips: ComputedPayslip[]): Promise<void>;
   replaceWarnings(payrunId: string, warnings: PayrollWarningResult[]): Promise<void>;
   updatePayrunStatus(payrunId: string, status: PayrunStatus): Promise<void>;
   createPayrun(input: Omit<PayrunInput, "id" | "status">): Promise<PayrunInput>;
   getPayrun(id: string): Promise<PayrunInput | null>;
+  listPayruns(): Promise<any[]>;
   getPayslips(payrunId: string): Promise<ComputedPayslip[]>;
+  listPayslips(filter?: { payrunId?: string; employeeId?: string; status?: string }): Promise<any[]>;
+  getPayslip(id: string): Promise<ComputedPayslip | null>;
 }
 
 export interface EmailGateway {
