@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const users = await prisma.user.findMany({
-      include: { role: true, employee: true },
       select: {
         id: true,
         workEmail: true,

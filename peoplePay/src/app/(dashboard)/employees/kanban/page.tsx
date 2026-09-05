@@ -67,7 +67,7 @@ export default function KanbanPage() {
               </div>
               
               <div className="space-y-4 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
-                {grouped[dept].map((emp) => (
+                {grouped[dept].map((emp: any) => (
                   <Link 
                     href={`/employees/${emp.id}`}
                     key={emp.id}
