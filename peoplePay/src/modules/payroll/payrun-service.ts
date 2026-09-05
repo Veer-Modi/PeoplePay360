@@ -15,10 +15,11 @@ export function continuePayrunWizard(input: PayrunDraftStepOne): PayrunDraftStep
 export class PayrunService {
   constructor(private readonly repository: PayrollRepository, private readonly contracts: ContractResolver) {}
 
-  async createFromStepTwo(stepOne: PayrunDraftStepOne, employeeIds: string[]): Promise<PayrunInput> {
+  async createFromStepTwo(stepOne: PayrunDraftStepOne, employeeIds: string[], createdById: string): Promise<PayrunInput> {
     continuePayrunWizard(stepOne);
     if (employeeIds.length === 0) throw new PayrollDomainError("Select at least one employee.", "empty_employee_scope");
-    return this.repository.createPayrun({ name: stepOne.name, period: { start: stepOne.periodStart, end: stepOne.periodEnd }, salaryStructure: stepOne.salaryStructure, employeeIds: [...new Set(employeeIds)] });
+    if (!createdById) throw new PayrollDomainError("A creating user is required.", "missing_creator");
+    return this.repository.createPayrun({ name: stepOne.name, period: { start: stepOne.periodStart, end: stepOne.periodEnd }, salaryStructure: stepOne.salaryStructure, employeeIds: [...new Set(employeeIds)], createdById });
   }
 
   async compute(payrunId: string): Promise<{ payslips: ComputedPayslip[]; warnings: PayrollWarningResult[] }> {
@@ -35,8 +36,12 @@ export class PayrunService {
       if (await this.repository.hasPayslip(payrun.id, employeeId) && payrun.status !== "Computed") {
         warnings.push({ type: "duplicate_payslip", severity: "Blocking", employeeId, message: `A payslip already exists for ${employee.fullName}.` }); continue;
       }
-      const payslip = computeEmployeePayslip({ payrun, employee, contract: contracts[0], workedDays: await this.repository.getWorkedDays(employeeId, payrun.period) });
-      payslips.push(payslip,);
+      const [workedDays, unpaidLeaveDays] = await Promise.all([
+        this.repository.getWorkedDays(employeeId, payrun.period),
+        this.repository.getUnpaidLeaveDays(employeeId, payrun.period),
+      ]);
+      const payslip = computeEmployeePayslip({ payrun, employee, contract: contracts[0], workedDays, unpaidLeaveDays });
+      payslips.push(payslip);
       warnings.push(...payslip.warnings);
     }
     // Adapter must make the replacement atomic so a failed compute never leaves partial data.
