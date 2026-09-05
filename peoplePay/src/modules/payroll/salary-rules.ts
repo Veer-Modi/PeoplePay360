@@ -12,6 +12,9 @@ function parseNumber(value: string, field: string): number {
 }
 
 function parsePercentage(value: string): { percentage: number; baseRuleCode: string } {
+  // The current seed data uses "10" for the documented Transport = 10% of BASIC rule.
+  // Structured JSON remains the preferred format for every new configurable rule.
+  if (Number.isFinite(Number(value))) return { percentage: Number(value), baseRuleCode: "BASIC" };
   try {
     const parsed = JSON.parse(value) as { percentage?: unknown; baseRuleCode?: unknown };
     if (typeof parsed.percentage !== "number" || typeof parsed.baseRuleCode !== "string") throw new Error();
@@ -106,7 +109,9 @@ export function evaluateRule(rule: SalaryRuleInput, context: RuleContext, contra
   switch (rule.calculationType) {
     case "Fixed":
       // BASIC = Contract.wage is the documented seed-data convention.
-      value = rule.calculationValue.trim() === "Contract.wage" ? contractWage : parseNumber(rule.calculationValue, "Fixed rule value");
+      value = ["Contract.wage", "= Contract.wage"].includes(rule.calculationValue.trim())
+        ? contractWage
+        : parseNumber(rule.calculationValue, "Fixed rule value");
       break;
     case "Percentage": {
       const { percentage, baseRuleCode } = parsePercentage(rule.calculationValue);
