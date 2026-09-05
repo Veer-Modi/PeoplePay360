@@ -19,12 +19,21 @@ export default function NewEmployeePage() {
     e.preventDefault();
     setLoading(true);
     
-    // In a real app, this would POST to /api/v1/employees
-    // For this UI mockup, we'll simulate a delay and redirect
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const res = await fetch("/api/v1/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!res.ok) throw new Error("Failed to create employee");
+      
       router.push("/employees");
-    }, 800);
+    } catch (error) {
+      console.error(error);
+      alert("Error creating employee. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
