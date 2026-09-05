@@ -87,16 +87,27 @@ export default function EmployeeDetailPage() {
                   {employee.status}
                 </span>
                 {employee.status !== "Archived" && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleDelete} 
-                    disabled={isDeleting}
-                    className="border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    {isDeleting ? "Archiving..." : "Archive"}
-                  </Button>
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => router.push(`/employees/${params.id}/edit`)}
+                      className="border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleDelete} 
+                      disabled={isDeleting}
+                      className="border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {isDeleting ? "Archiving..." : "Archive"}
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
