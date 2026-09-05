@@ -9,6 +9,7 @@ interface AttendanceWidgetProps {
 }
 
 export function AttendanceWidget({ employeeId = '', onAttendanceChange }: AttendanceWidgetProps) {
+  const [mounted, setMounted] = useState(false);
   const [activeSession, setActiveSession] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,26 +17,26 @@ export function AttendanceWidget({ employeeId = '', onAttendanceChange }: Attend
   const [selectedEmpId, setSelectedEmpId] = useState(employeeId);
   const [employees, setEmployees] = useState<any[]>([]);
 
-  // Fetch employees list for demo switching
   useEffect(() => {
-    fetch('/api/v1/attendance?limit=1')
+    setMounted(true);
+    // Fetch available employees once
+    fetch('/api/v1/attendance')
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.data) {
-          // Collect unique employees from recent records if any
+        if (data.success && data.data && data.data.length > 0) {
           const emps = Array.from(
             new Map(data.data.map((r: any) => [r.employee.id, r.employee])).values()
           );
           setEmployees(emps);
-          if (!selectedEmpId && emps.length > 0) {
+          if (!employeeId && emps.length > 0) {
             setSelectedEmpId((emps[0] as any).id);
           }
         }
       })
       .catch(() => {});
-  }, [selectedEmpId]);
+  }, [employeeId]);
 
-  // Check current check-in status
+  // Check current check-in status when selected employee changes
   useEffect(() => {
     if (!selectedEmpId) return;
     fetch(`/api/v1/attendance?employeeId=${selectedEmpId}&exceptionsOnly=true`)
@@ -117,8 +118,8 @@ export function AttendanceWidget({ employeeId = '', onAttendanceChange }: Attend
             <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Attendance Quick Action
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {activeSession
+            <p className="text-xs text-zinc-500 dark:text-zinc-400" suppressHydrationWarning>
+              {mounted && activeSession
                 ? `Active session started at ${new Date(activeSession.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                 : 'Not currently checked in'}
             </p>
@@ -126,6 +127,20 @@ export function AttendanceWidget({ employeeId = '', onAttendanceChange }: Attend
         </div>
 
         <div className="flex items-center gap-3">
+          {employees.length > 1 && (
+            <select
+              value={selectedEmpId}
+              onChange={(e) => setSelectedEmpId(e.target.value)}
+              className="text-xs px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-none font-medium focus:ring-2 focus:ring-emerald-500"
+            >
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.fullName}
+                </option>
+              ))}
+            </select>
+          )}
+
           {activeSession ? (
             <button
               onClick={handleCheckOut}

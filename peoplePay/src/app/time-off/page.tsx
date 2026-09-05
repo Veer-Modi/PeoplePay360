@@ -366,7 +366,7 @@ export default function TimeOffPage() {
                       <td className="px-6 py-4 font-medium text-xs">
                         {r.timeOffType?.name}
                       </td>
-                      <td className="px-6 py-4 text-xs font-mono text-zinc-600 dark:text-zinc-400">
+                      <td className="px-6 py-4 text-xs font-mono text-zinc-600 dark:text-zinc-400" suppressHydrationWarning>
                         {new Date(r.startDate).toLocaleDateString()} – {new Date(r.endDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 font-semibold text-xs">
