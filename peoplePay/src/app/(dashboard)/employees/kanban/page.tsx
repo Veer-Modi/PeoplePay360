@@ -42,10 +42,10 @@ export default function KanbanPage() {
             <LayoutList className="w-4 h-4 mr-2" />
             List View
           </Link>
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors flex items-center shadow-lg shadow-blue-500/20">
+          <Link href="/employees/new" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors flex items-center shadow-lg shadow-blue-500/20">
             <Plus className="w-4 h-4 mr-2" />
             Add Employee
-          </button>
+          </Link>
         </div>
       </div>
 
