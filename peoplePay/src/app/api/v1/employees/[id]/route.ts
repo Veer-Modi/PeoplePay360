@@ -22,3 +22,30 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return errorResponse(error.message, 500);
   }
 }
+
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const auth = await requireRole(["HR Manager", "Admin"]);
+  if (auth.error) return jsonResponse(auth, auth.status);
+
+  try {
+    const data = await request.json();
+    const updated = await EmployeeService.updateEmployee(resolvedParams.id, data);
+    return jsonResponse(updated);
+  } catch (error: any) {
+    return errorResponse(error.message, 400);
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const auth = await requireRole(["HR Manager", "Admin"]);
+  if (auth.error) return jsonResponse(auth, auth.status);
+
+  try {
+    await EmployeeService.archiveEmployee(resolvedParams.id);
+    return jsonResponse({ success: true });
+  } catch (error: any) {
+    return errorResponse(error.message, 400);
+  }
+}
