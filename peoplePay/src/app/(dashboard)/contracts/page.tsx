@@ -12,7 +12,11 @@ export default function ContractsListPage() {
     fetch("/api/v1/contracts")
       .then((res) => res.json())
       .then((data) => {
-        setContracts(data);
+        if (Array.isArray(data)) {
+          setContracts(data);
+        } else {
+          setContracts([]);
+        }
         setLoading(false);
       });
   }, []);
