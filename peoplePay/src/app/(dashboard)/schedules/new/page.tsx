@@ -28,11 +28,23 @@ export default function NewSchedulePage() {
     e.preventDefault();
     setLoading(true);
     
-    // In a real app, POST to /api/v1/schedules
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const res = await fetch("/api/v1/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, type, days }),
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to create schedule");
+      }
+      
       router.push("/schedules");
-    }, 800);
+    } catch (error) {
+      console.error(error);
+      alert("Error creating schedule. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (

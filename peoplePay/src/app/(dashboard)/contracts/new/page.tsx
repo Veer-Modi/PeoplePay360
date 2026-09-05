@@ -20,11 +20,21 @@ export default function NewContractPage() {
     e.preventDefault();
     setLoading(true);
     
-    // In a real app, POST to /api/v1/contracts
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const res = await fetch("/api/v1/contracts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!res.ok) throw new Error("Failed to create contract");
+      
       router.push("/contracts");
-    }, 800);
+    } catch (error) {
+      console.error(error);
+      alert("Error creating contract. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (

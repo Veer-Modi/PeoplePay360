@@ -13,7 +13,11 @@ export default function EmployeesListPage() {
     fetch("/api/v1/employees")
       .then((res) => res.json())
       .then((data) => {
-        setEmployees(data);
+        if (Array.isArray(data)) {
+          setEmployees(data);
+        } else {
+          setEmployees([]);
+        }
         setLoading(false);
       });
   }, []);

@@ -12,7 +12,11 @@ export default function SchedulesListPage() {
     fetch("/api/v1/schedules")
       .then((res) => res.json())
       .then((data) => {
-        setSchedules(data);
+        if (Array.isArray(data)) {
+          setSchedules(data);
+        } else {
+          setSchedules([]);
+        }
         setLoading(false);
       });
   }, []);
