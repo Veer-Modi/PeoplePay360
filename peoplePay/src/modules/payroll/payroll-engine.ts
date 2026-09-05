@@ -10,12 +10,16 @@ export function computeEmployeePayslip(input: {
   employee: EmployeePayrollInput;
   contract: ApplicableContract;
   workedDays: number;
+  unpaidLeaveDays?: number;
 }): ComputedPayslip {
-  const { payrun, employee, contract, workedDays } = input;
+  const { payrun, employee, contract, workedDays, unpaidLeaveDays = 0 } = input;
   if (contract.salaryStructureId !== payrun.salaryStructure.id) {
     throw new PayrollDomainError("The applicable contract does not match the Payrun salary structure.", "structure_mismatch");
   }
-  const context: RuleContext = {};
+  const context: RuleContext = {
+    WORKED_DAYS: workedDays,
+    UNPAID_LEAVE_DAYS: unpaidLeaveDays,
+  };
   const lines = validateRules(payrun.salaryStructure.rules).map((rule) => {
     const amount = evaluateRule(rule, context, contract.wage);
     context[rule.code] = amount;
